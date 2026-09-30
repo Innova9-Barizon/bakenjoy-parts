@@ -5,7 +5,7 @@ const getCookie = (name) => { const value = `; ${document.cookie}`; const parts 
 const deleteCookie = (name) => { document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`; };
 const LOGO_URL = 'https://chatjdevibe.innova9.io/vibe/images/Logo_thin.png';
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-const BUILD = 'bnj-mike-20260930-1530mt';
+const BUILD = 'bnj-mike-20260930-1650mt';
 const trimDisplay = (v) => String(v ?? '').trim();
 const displayOrDash = (v) => trimDisplay(v) || '—';
 const parseAisError = (data, fallback) => {
@@ -116,7 +116,6 @@ export default function BakeNJoyParts() {
             <img src={LOGO_URL} alt="Innova9" style={{ height: 56, marginBottom: 12 }} />
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Bake n Joy — Part Lookup</h1>
             <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>JD Edwards EnterpriseOne</p>
-            <span style={{ display: 'inline-block', marginTop: 10, padding: '4px 10px', borderRadius: 20, background: '#fdf2f8', color: '#db2777', fontSize: 12, fontWeight: 600 }}>itemSearch + itemAvailability</span>
           </div>
           {sessionExpiredMessage && <div style={{ padding: 12, background: '#fffbeb', borderRadius: 8, color: '#92400e', marginBottom: 12 }}>{sessionExpiredMessage}</div>}
           {error && <div style={{ padding: 12, background: '#fef2f2', borderRadius: 8, color: '#dc2626', marginBottom: 12 }}>{error}</div>}
@@ -161,7 +160,6 @@ export default function BakeNJoyParts() {
             <div style={{ flex: '0 1 120px' }}><label style={labelStyle}>Branch</label><input style={inputStyle} value={branchPlant} onChange={(e) => setBranchPlant(e.target.value)} /></div>
             <button type="button" disabled={loading} onClick={() => searchItems()} style={{ padding: '10px 18px', background: '#db2777', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>{loading ? 'Searching…' : 'Search'}</button>
           </div>
-          <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Orchs: itemSearch + itemAvailability (reuse Shared)</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 16 }}>
