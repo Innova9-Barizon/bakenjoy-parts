@@ -5,7 +5,6 @@ const getCookie = (name) => { const value = `; ${document.cookie}`; const parts 
 const deleteCookie = (name) => { document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`; };
 const LOGO_URL = 'https://chatjdevibe.innova9.io/vibe/images/Logo_thin.png';
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-const BUILD = 'bnj-mike-20260930-1650mt';
 const trimDisplay = (v) => String(v ?? '').trim();
 const displayOrDash = (v) => trimDisplay(v) || '—';
 const parseAisError = (data, fallback) => {
@@ -113,7 +112,7 @@ export default function BakeNJoyParts() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#1e3a8a,#3b82f6,#60a5fa)', padding: 20, fontFamily: FONT }}>
         <div style={{ background: '#fff', borderRadius: 16, padding: 40, width: '100%', maxWidth: 420, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <img src={LOGO_URL} alt="Innova9" style={{ height: 56, marginBottom: 12 }} />
+            <img src={LOGO_URL} alt="Innova9" style={{ display: 'block', height: 56, margin: '0 auto 12px', objectFit: 'contain' }} />
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', margin: '0 0 6px' }}>Bake n Joy — Part Lookup</h1>
             <p style={{ margin: 0, color: '#4b5563', fontSize: 14 }}>JD Edwards EnterpriseOne</p>
           </div>
@@ -130,7 +129,6 @@ export default function BakeNJoyParts() {
             <div><label style={labelStyle}>Password</label><input style={inputStyle} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
             <button type="submit" disabled={loginLoading} style={{ padding: 14, background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>{loginLoading ? 'Signing in…' : 'Sign In'}</button>
           </form>
-          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: '#6b7280' }}>{envConfig.jdeEnv} · {BUILD}</div>
         </div>
       </div>
     );
