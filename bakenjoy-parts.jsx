@@ -238,27 +238,45 @@ export default function BakeNJoyParts() {
             )}
           </div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 16 }}>
-            <h2 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600 }}>Availability {selectedItem ? `· ${selectedItem.itemNumber}` : ''}</h2>
-            {!selectedItem ? <div style={{ padding: 32, textAlign: 'center', color: '#9ca3af' }}>Select an item.</div> : availability.length === 0 ? <div style={{ padding: 32, textAlign: 'center', color: '#9ca3af' }}>No availability rows.</div> : (
-              <div style={{ maxHeight: 420, overflow: 'auto', border: '1px solid #e5e7eb', borderRadius: 6 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead><tr>
-                    {['Location','Branch','On hand','Committed','Available','On WO','On PO'].map((h) => <th key={h} style={{ position: 'sticky', top: 0, background: '#f9fafb', padding: '10px 12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>{h}</th>)}
-                  </tr></thead>
-                  <tbody>
-                    {availability.map((r, i) => (
-                      <tr key={i} style={{ background: i % 2 ? '#f9fafb' : '#fff' }}>
-                        <td style={{ padding: '8px 12px' }}>{displayOrDash(r.location)}</td>
-                        <td style={{ padding: '8px 12px' }}>{displayOrDash(r.branchPlant)}</td>
-                        <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{displayOrDash(r.onHand)}</td>
-                        <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{displayOrDash(r.committed)}</td>
-                        <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{displayOrDash(r.available)}</td>
-                        <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{displayOrDash(r.onWO)}</td>
-                        <td style={{ padding: '8px 12px', textAlign: 'right', fontFamily: 'monospace' }}>{displayOrDash(r.onPO)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <h2 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600, color: '#111827' }}>Availability {selectedItem ? `· ${selectedItem.itemNumber}` : ''}</h2>
+            {!selectedItem ? <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>Select an item.</div> : availability.length === 0 ? <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>No availability rows.</div> : (
+              <div style={{ maxHeight: 520, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {availability.map((r, i) => {
+                  const loc = displayOrDash(r.location);
+                  const br = displayOrDash(r.branchPlant);
+                  const metrics = [
+                    { key: 'onHand', label: 'On hand', value: displayOrDash(r.onHand), color: '#1d4ed8', bg: '#eff6ff',
+                      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27,6.96 12,12.01 20.73,6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg> },
+                    { key: 'committed', label: 'Committed', value: displayOrDash(r.committed), color: '#b45309', bg: '#fffbeb',
+                      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /><line x1="9" y1="15" x2="15" y2="15" /></svg> },
+                    { key: 'available', label: 'Available', value: displayOrDash(r.available), color: '#15803d', bg: '#f0fdf4',
+                      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22,4 12,14.01 9,11.01" /></svg> },
+                    { key: 'onWO', label: 'On WO', value: displayOrDash(r.onWO), color: '#7c3aed', bg: '#f5f3ff',
+                      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg> },
+                    { key: 'onPO', label: 'On PO', value: displayOrDash(r.onPO), color: '#be185d', bg: '#fdf2f8',
+                      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="1" y="3" width="15" height="13" /><polygon points="16,8 20,8 23,11 23,16 16,16 16,8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg> },
+                  ];
+                  return (
+                    <div key={i} style={{ border: '1px solid #d1d5db', borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+                      <div style={{ padding: '12px 14px', background: '#111827', color: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                        <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.2 }}>Location {loc}</div>
+                        <div style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.15)', padding: '4px 10px', borderRadius: 999 }}>Branch {br}</div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, padding: 12 }}>
+                        {metrics.map((m) => (
+                          <div key={m.key} style={{ background: m.bg, border: `1px solid ${m.color}33`, borderRadius: 10, padding: '12px 10px', minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: m.color, marginBottom: 6 }}>
+                              <span style={{ display: 'inline-flex', color: m.color }}>{m.icon}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}>{m.label}</span>
+                            </div>
+                            <div style={{ fontSize: 28, fontWeight: 800, color: '#111827', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', wordBreak: 'break-word' }}>{m.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
