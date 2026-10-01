@@ -63,6 +63,28 @@ const LOGO_URL = 'https://chatjdevibe.innova9.io/vibe/images/Logo_thin.png';
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 const trimDisplay = (v) => String(v ?? '').trim();
 const displayOrDash = (v) => trimDisplay(v) || '—';
+
+const normalizeLocLabel = (v) => String(v ?? '').trim().replace(/[:\s]+$/g, '').replace(/\s+/g, ' ').toUpperCase();
+const isSummaryLocation = (loc) => {
+  const s = normalizeLocLabel(loc);
+  if (!s) return false;
+  return s === 'TOTAL' || s === 'GRAND TOTAL' || s === 'SUBTOTAL' || s === 'SUB TOTAL'
+    || /^GRAND\s+TOTAL$/.test(s) || /^SUB[-\s]?TOTAL$/.test(s);
+};
+const splitAvailabilityRows = (rows) => {
+  const list = Array.isArray(rows) ? rows : [];
+  const locations = [];
+  let grandTotal = null;
+  let branchTotal = null;
+  for (const r of list) {
+    const s = normalizeLocLabel(r?.location);
+    if (s === 'GRAND TOTAL' || /^GRAND\s+TOTAL$/.test(s)) { grandTotal = r; continue; }
+    if (s === 'TOTAL' || s === 'SUBTOTAL' || s === 'SUB TOTAL' || /^SUB[-\s]?TOTAL$/.test(s)) { branchTotal = r; continue; }
+    if (isSummaryLocation(r?.location)) continue;
+    locations.push(r);
+  }
+  return { locations, branchTotal, grandTotal };
+};
 const parseAisError = (data, fallback) => {
   if (!data) return fallback;
   if (typeof data === 'string' && data.trim()) return data.trim();
@@ -87,6 +109,7 @@ export default function BakeNJoyParts() {
   const [branchPlant, setBranchPlant] = useState('M30');
   const [selectedItem, setSelectedItem] = useState(null);
   const [availability, setAvailability] = useState([]);
+  const [availabilitySummary, setAvailabilitySummary] = useState(null);
   const [message, setMessage] = useState(null);
 
   const ENVIRONMENTS = {
@@ -123,7 +146,7 @@ export default function BakeNJoyParts() {
   };
 
   const searchItems = async () => {
-    setLoading(true); setError(null); setMessage(null); setAvailability([]); setSelectedItem(null);
+    setLoading(true); setError(null); setMessage(null); setAvailability([]); setAvailabilitySummary(null); setSelectedItem(null);
     try {
       const data = await orchFetch('itemSearch', { itemDescription: trimDisplay(query) });
       if (!data) return;
@@ -135,14 +158,16 @@ export default function BakeNJoyParts() {
   };
 
   const loadAvailability = async (item) => {
-    setSelectedItem(item); setLoading(true); setError(null);
+    setSelectedItem(item); setLoading(true); setError(null); setAvailabilitySummary(null);
     try {
       const data = await orchFetch('itemAvailability', { itemNumber: trimDisplay(item.itemNumber), branchPlant: trimDisplay(branchPlant) });
       if (!data) return;
       const rows = Array.isArray(data.itemAvailability) ? data.itemAvailability : [];
-      setAvailability(rows);
-      setMessage(`Availability for ${item.itemNumber} @ ${branchPlant}: ${rows.length} location(s)`);
-    } catch (err) { setError(err.message); setAvailability([]); }
+      const { locations, branchTotal, grandTotal } = splitAvailabilityRows(rows);
+      setAvailability(locations);
+      setAvailabilitySummary(grandTotal || branchTotal || null);
+      setMessage(`Availability for ${item.itemNumber} @ ${branchPlant}: ${locations.length} location(s)`);
+    } catch (err) { setError(err.message); setAvailability([]); setAvailabilitySummary(null); }
     finally { setLoading(false); }
   };
 
@@ -239,8 +264,27 @@ export default function BakeNJoyParts() {
           </div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb', padding: 16 }}>
             <h2 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600, color: '#111827' }}>Availability {selectedItem ? `· ${selectedItem.itemNumber}` : ''}</h2>
-            {!selectedItem ? <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>Select an item.</div> : availability.length === 0 ? <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>No availability rows.</div> : (
-              <div style={{ maxHeight: 520, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {!selectedItem ? <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>Select an item.</div> : availability.length === 0 && !availabilitySummary ? <div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>No availability rows.</div> : (
+              <div style={{ maxHeight: 560, overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {availabilitySummary && (
+                  <div style={{ border: '1px solid #bbf7d0', borderRadius: 12, background: 'linear-gradient(180deg,#f0fdf4,#ffffff)', padding: '14px 16px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: '#15803d', marginBottom: 10 }}>Grand total · {displayOrDash(branchPlant)}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10 }}>
+                      {[
+                        { label: 'On hand', value: displayOrDash(availabilitySummary.onHand) },
+                        { label: 'Committed', value: displayOrDash(availabilitySummary.committed) },
+                        { label: 'Available', value: displayOrDash(availabilitySummary.available) },
+                        { label: 'On WO', value: displayOrDash(availabilitySummary.onWO) },
+                        { label: 'On PO', value: displayOrDash(availabilitySummary.onPO) },
+                      ].map((m) => (
+                        <div key={m.label} style={{ minHeight: 64, padding: '10px 12px', borderRadius: 10, background: '#fff', border: '1px solid #d1fae5' }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 6 }}>{m.label}</div>
+                          <div style={{ fontSize: 22, fontWeight: 800, color: '#14532d', lineHeight: 1.2, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}>{m.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {availability.map((r, i) => {
                   const loc = displayOrDash(r.location);
                   const br = displayOrDash(r.branchPlant);
@@ -257,20 +301,20 @@ export default function BakeNJoyParts() {
                       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="1" y="3" width="15" height="13" /><polygon points="16,8 20,8 23,11 23,16 16,16 16,8" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg> },
                   ];
                   return (
-                    <div key={i} style={{ border: '1px solid #d1d5db', borderRadius: 12, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-                      <div style={{ padding: '12px 14px', background: '#111827', color: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <div key={i} style={{ border: '1px solid #d1d5db', borderRadius: 14, background: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+                      <div style={{ padding: '14px 16px', background: '#111827', color: '#fff', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                        <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.2 }}>Location {loc}</div>
-                        <div style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.15)', padding: '4px 10px', borderRadius: 999 }}>Branch {br}</div>
+                        <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: 0.2 }}>Location {loc}</div>
+                        <div style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 600, background: 'rgba(255,255,255,0.15)', padding: '5px 12px', borderRadius: 999 }}>Branch {br}</div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, padding: 12 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))', gap: 12, padding: 14 }}>
                         {metrics.map((m) => (
-                          <div key={m.key} style={{ background: m.bg, border: `1px solid ${m.color}33`, borderRadius: 10, padding: '12px 10px', minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: m.color, marginBottom: 6 }}>
-                              <span style={{ display: 'inline-flex', color: m.color }}>{m.icon}</span>
+                          <div key={m.key} style={{ background: m.bg, border: `1px solid ${m.color}33`, borderRadius: 12, padding: '14px 12px', minWidth: 0, minHeight: 88, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: m.color, marginBottom: 8 }}>
+                              <span style={{ display: 'inline-flex', color: m.color, flexShrink: 0 }}>{m.icon}</span>
                               <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase' }}>{m.label}</span>
                             </div>
-                            <div style={{ fontSize: 28, fontWeight: 800, color: '#111827', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', wordBreak: 'break-word' }}>{m.value}</div>
+                            <div style={{ fontSize: 26, fontWeight: 800, color: '#111827', lineHeight: 1.25, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{m.value}</div>
                           </div>
                         ))}
                       </div>
